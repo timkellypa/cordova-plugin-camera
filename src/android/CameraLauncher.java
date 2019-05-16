@@ -104,6 +104,8 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     //Where did this come from?
     private static final int CROP_CAMERA = 100;
 
+    private static final int TIMEOUT_TICK_MS = 1000;
+
     private static final String TIME_FORMAT = "yyyyMMdd_HHmmss";
 
     private int mQuality;                   // Compression quality hint (0-100: 0=low quality & high compression, 100=compress of max quality)
@@ -118,10 +120,12 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private boolean correctOrientation;     // Should the pictures orientation be corrected
     private boolean orientationCorrected;   // Has the picture's orientation been corrected
     private boolean allowEdit;              // Should we allow the user to crop the image.
+    private int timeOutMs; // Milliseconds to keep the image chooser or camera open before shutting down activity
 
     protected final static String[] permissions = { Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE };
 
     public CallbackContext callbackContext;
+    private ActivityShutDownTimer shutDownTimer;
     private int numPics;
 
     private MediaScannerConnection conn;    // Used to update gallery app with newly-written files
@@ -156,6 +160,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             this.encodingType = JPEG;
             this.mediaType = PICTURE;
             this.mQuality = 50;
+            this.timeOutMs = 0;
 
             //Take the values from the arguments if they're not already defined (this is tricky)
             this.destType = args.getInt(1);
@@ -168,6 +173,9 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             this.allowEdit = args.getBoolean(7);
             this.correctOrientation = args.getBoolean(8);
             this.saveToPhotoAlbum = args.getBoolean(9);
+            // args[10] = popOverOptions
+            // args[11] = cameraDirection
+            this.timeOutMs = args.getInt(12);
 
             // If the user specifies a 0 or smaller width/height
             // make it -1 so later comparisons succeed
@@ -176,6 +184,9 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             }
             if (this.targetHeight < 1) {
                 this.targetHeight = -1;
+            }
+            if (this.timeOutMs < 1) {
+                this.timeOutMs = -1;
             }
 
             // We don't return full-quality PNG files. The camera outputs a JPEG
@@ -312,7 +323,14 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             PackageManager mPm = this.cordova.getActivity().getPackageManager();
             if(intent.resolveActivity(mPm) != null)
             {
-                this.cordova.startActivityForResult((CordovaPlugin) this, intent, (CAMERA + 1) * 16 + returnType + 1);
+                int requestCode = (CAMERA + 1) * 16 + returnType + 1;
+                Activity parentActivity = this.cordova.getActivity();
+
+                this.cordova.startActivityForResult(this, intent, requestCode);
+                if (this.timeOutMs != -1) {
+                    shutDownTimer = new ActivityShutDownTimer(this.timeOutMs, TIMEOUT_TICK_MS, parentActivity, requestCode);
+                    shutDownTimer.start();
+                }
             }
             else
             {
@@ -406,8 +424,16 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
             intent.addCategory(Intent.CATEGORY_OPENABLE);
         }
         if (this.cordova != null) {
-            this.cordova.startActivityForResult((CordovaPlugin) this, Intent.createChooser(intent,
-                    new String(title)), (srcType + 1) * 16 + returnType + 1);
+            int requestCode = (srcType + 1) * 16 + returnType + 1;
+            Activity parentActivity = this.cordova.getActivity();
+
+            this.cordova.startActivityForResult(this, Intent.createChooser(intent, new String(title)),
+                    requestCode);
+
+            if (this.timeOutMs != -1) {
+                shutDownTimer = new ActivityShutDownTimer(this.timeOutMs, TIMEOUT_TICK_MS, parentActivity, requestCode);
+                shutDownTimer.start();
+            }
         }
     }
 

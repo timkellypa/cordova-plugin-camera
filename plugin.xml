@@ -22,7 +22,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:rim="http://www.blackberry.com/ns/widgets"
     id="cordova-plugin-camera"
-    version="4.1.0-dev">
+    version="4.0.3">
     <name>Camera</name>
     <description>Cordova Camera Plugin</description>
     <license>Apache 2.0</license>
@@ -31,7 +31,6 @@
     <issue>https://issues.apache.org/jira/browse/CB/component/12320645</issue>
 
     <engines>
-        <engine name="cordova" version=">=7.1.0"/>
         <engine name="cordova-android" version=">=6.3.0" />
     </engines>
 
@@ -51,6 +50,7 @@
 
     <!-- android -->
     <platform name="android">
+        <framework custom="true" src="src/android/gradle/build.gradle" type="gradleReference" />
         <config-file target="res/xml/config.xml" parent="/*">
             <feature name="Camera">
                 <param name="android-package" value="org.apache.cordova.camera.CameraLauncher"/>
@@ -71,6 +71,7 @@
           </provider>
         </config-file>
 
+        <source-file src="src/android/ActivityShutDownTimer.java" target-dir="src/org/apache/cordova/camera" />
         <source-file src="src/android/CameraLauncher.java" target-dir="src/org/apache/cordova/camera" />
         <source-file src="src/android/CordovaUri.java" target-dir="src/org/apache/cordova/camera" />
         <source-file src="src/android/FileHelper.java" target-dir="src/org/apache/cordova/camera" />
@@ -81,10 +82,6 @@
         <js-module src="www/CameraPopoverHandle.js" name="CameraPopoverHandle">
             <clobbers target="CameraPopoverHandle" />
           </js-module>
-
-        <preference name="ANDROID_SUPPORT_V4_VERSION" default="27.+"/>
-        <framework src="com.android.support:support-v4:$ANDROID_SUPPORT_V4_VERSION"/>
-
       </platform>
 
      <!-- ios -->
@@ -95,6 +92,12 @@
              </feature>
              <preference name="CameraUsesGeolocation" value="false" />
          </config-file>
+         <config-file target="*-Info.plist" parent="NSCameraUsageDescription">
+            <string>This application may use the camera to collect additional information, such as bar codes.</string>
+        </config-file>
+        <config-file target="*-Info.plist" parent="NSPhotoLibraryUsageDescription">
+            <string>This application may use the camera to collect additional information, such as bar codes.</string>
+        </config-file>
 
          <js-module src="www/ios/CameraPopoverHandle.js" name="CameraPopoverHandle">
             <clobbers target="CameraPopoverHandle" />

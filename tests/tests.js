@@ -94,6 +94,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
     var camMediaTypeDefault = ['mediaType', 0];
     var camCorrectOrientationDefault = ['correctOrientation', false];
     var camSaveToPhotoAlbumDefault = ['saveToPhotoAlbum', true];
+    var camTimeOutDefault = ['0', 0];
 
     function log (value) {
         console.log(value);
@@ -416,6 +417,7 @@ exports.defineManualTests = function (contentEl, createActionButton) {
             createOptionsEl('correctOrientation', true, camCorrectOrientationDefault) +
             createOptionsEl('saveToPhotoAlbum', true, camSaveToPhotoAlbumDefault) +
             createOptionsEl('cameraDirection', Camera.Direction) +
+            createOptionsEl('timeOutMs', { '0': 0, '5000': 5000, '30000': 30000 }, camTimeOutDefault) +
             '</div>';
     var getpicture_div = '<div id="getpicture"></div>';
     var test_procedure = '<h4>Recommended Test Procedure</h4>' +
