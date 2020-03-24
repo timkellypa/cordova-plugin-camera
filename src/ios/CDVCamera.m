@@ -81,6 +81,7 @@ static NSString* toBase64(NSData* data) {
     pictureOptions.saveToPhotoAlbum = [[command argumentAtIndex:9 withDefault:@(NO)] boolValue];
     pictureOptions.popoverOptions = [command argumentAtIndex:10 withDefault:nil];
     pictureOptions.cameraDirection = [[command argumentAtIndex:11 withDefault:@(UIImagePickerControllerCameraDeviceRear)] unsignedIntegerValue];
+    pictureOptions.timeoutMS = [[command argumentAtIndex:12 withDefault:0] intValue];
 
     pictureOptions.popoverSupported = NO;
     pictureOptions.usesGeolocation = NO;
@@ -213,6 +214,16 @@ static NSString* toBase64(NSData* data) {
             [self.viewController presentViewController:cameraPicker animated:YES completion:^{
                 self.hasPendingOperation = NO;
             }];
+            
+            if (pictureOptions.timeoutMS > 0) {
+                NSTimeInterval interval = pictureOptions.timeoutMS / 1000;
+                NSTimer *timer = [NSTimer timerWithTimeInterval:interval repeats:NO block:^(NSTimer * timer) {
+                    [cameraPicker dismissModalViewControllerAnimated:YES];
+                    timer = nil;
+                }];
+                
+                [[NSRunLoop mainRunLoop] addTimer:timer forMode:NSDefaultRunLoopMode];
+            }
         }
     });
 }
@@ -250,12 +261,31 @@ static NSString* toBase64(NSData* data) {
     return value;
 }
 
+- (void)dismissPopover
+{
+    // If a popover is already open, close it
+    if (([[self pickerController] pickerPopoverController] != nil) && [[[self pickerController] pickerPopoverController] isPopoverVisible]) {
+        [[[self pickerController] pickerPopoverController] dismissPopoverAnimated:YES];
+        [[[self pickerController] pickerPopoverController] setDelegate:nil];
+        [[self pickerController] setPickerPopoverController:nil];
+    }
+
+    [self.pickerController dismissViewControllerAnimated:NO completion:^{
+        CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"dismissed camera"];
+        [self.commandDelegate sendPluginResult:result callbackId:self.pickerController.callbackId];
+
+        self.hasPendingOperation = NO;
+        self.pickerController = nil;
+    }];
+}
+
 - (void)displayPopover:(NSDictionary*)options
 {
     NSInteger x = 0;
     NSInteger y = 32;
     NSInteger width = 320;
     NSInteger height = 480;
+    NSInteger timeout = 0;
     UIPopoverArrowDirection arrowDirection = UIPopoverArrowDirectionAny;
 
     if (options) {
@@ -267,6 +297,7 @@ static NSString* toBase64(NSData* data) {
         if (![org_apache_cordova_validArrowDirections containsObject:[NSNumber numberWithUnsignedInteger:arrowDirection]]) {
             arrowDirection = UIPopoverArrowDirectionAny;
         }
+        timeout = [self integerValueForKey:options key:@"timeoutMS" defaultValue:0];
     }
 
     [[[self pickerController] pickerPopoverController] setDelegate:self];
@@ -274,6 +305,15 @@ static NSString* toBase64(NSData* data) {
                                                                  inView:[self.webView superview]
                                                permittedArrowDirections:arrowDirection
                                                                animated:YES];
+    
+    // Set timeout on popover
+    if (timeout > 0) {
+        NSTimeInterval interval = timeout / 1000;
+        NSTimer *timer = [NSTimer timerWithTimeInterval:interval repeats:NO block:^(NSTimer * timer) {
+            self.dismissPopover;
+            timer = nil;
+        }];
+    }
 }
 
 - (void)navigationController:(UINavigationController *)navigationController willShowViewController:(UIViewController *)viewController animated:(BOOL)animated

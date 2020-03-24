@@ -55,6 +55,7 @@ typedef NSUInteger CDVMediaType;
 @property (assign) BOOL saveToPhotoAlbum;
 @property (strong) NSDictionary* popoverOptions;
 @property (assign) UIImagePickerControllerCameraDevice cameraDirection;
+@property (assign) int timeoutMS;
 
 @property (assign) BOOL popoverSupported;
 @property (assign) BOOL usesGeolocation;
@@ -104,6 +105,7 @@ typedef NSUInteger CDVMediaType;
 - (void)takePicture:(CDVInvokedUrlCommand*)command;
 - (void)cleanup:(CDVInvokedUrlCommand*)command;
 - (void)repositionPopover:(CDVInvokedUrlCommand*)command;
+- (void)dimissCamera:(CDVInvokedUrlCommand*)command;
 
 - (void)imagePickerController:(UIImagePickerController*)picker didFinishPickingMediaWithInfo:(NSDictionary*)info;
 - (void)imagePickerController:(UIImagePickerController*)picker didFinishPickingImage:(UIImage*)image editingInfo:(NSDictionary*)editingInfo;
