@@ -135,7 +135,6 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
     private ExifHelper exifData;            // Exif data from source
     private String applicationId;
 
-
     /**
      * Executes the request and returns PluginResult.
      *
@@ -790,6 +789,10 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
      * @param intent      An Intent, which can return result data to the caller (various data can be attached to Intent "extras").
      */
     public void onActivityResult(int requestCode, int resultCode, Intent intent) {
+        if (shutDownTimer != null) {
+            shutDownTimer.cancel();
+            shutDownTimer = null;
+        }
 
         // Get src and dest types from request code for a Camera Activity
         int srcType = (requestCode / 16) - 1;
@@ -811,7 +814,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
             }// If cancelled
             else if (resultCode == Activity.RESULT_CANCELED) {
-                this.failPicture("No Image Selected");
+                LOG.d(LOG_TAG, "No Image Selected");
             }
 
             // If something else
