@@ -1,16 +1,15 @@
 package org.apache.cordova.camera;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.CountDownTimer;
 
 public class ActivityShutDownTimer extends CountDownTimer {
     private Activity parentActivity;
-    private int requestCode;
 
-    ActivityShutDownTimer(long millsInFuture, long countDownInterval, Activity parentActivity, int requestCode) {
+    ActivityShutDownTimer(long millsInFuture, long countDownInterval, Activity parentActivity) {
         super(millsInFuture, countDownInterval);
         this.parentActivity = parentActivity;
-        this.requestCode = requestCode;
     }
 
     @Override
@@ -21,7 +20,9 @@ public class ActivityShutDownTimer extends CountDownTimer {
     @Override
     public void onFinish() {
         try {
-            parentActivity.finishActivity(requestCode);
+            Intent parentIntent = parentActivity.getIntent();
+            parentIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            this.parentActivity.getApplicationContext().startActivity(parentIntent);
         } catch (Exception ex) {
             // nothing to do on exception
         }

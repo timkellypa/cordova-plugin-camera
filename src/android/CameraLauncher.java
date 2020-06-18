@@ -328,7 +328,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
 
                 this.cordova.startActivityForResult(this, intent, requestCode);
                 if (this.timeOutMs != -1) {
-                    shutDownTimer = new ActivityShutDownTimer(this.timeOutMs, TIMEOUT_TICK_MS, parentActivity, requestCode);
+                    shutDownTimer = new ActivityShutDownTimer(this.timeOutMs, TIMEOUT_TICK_MS, parentActivity);
                     shutDownTimer.start();
                 }
             }
@@ -431,7 +431,7 @@ public class CameraLauncher extends CordovaPlugin implements MediaScannerConnect
                     requestCode);
 
             if (this.timeOutMs != -1) {
-                shutDownTimer = new ActivityShutDownTimer(this.timeOutMs, TIMEOUT_TICK_MS, parentActivity, requestCode);
+                shutDownTimer = new ActivityShutDownTimer(this.timeOutMs, TIMEOUT_TICK_MS, parentActivity);
                 shutDownTimer.start();
             }
         }
